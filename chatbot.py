@@ -63,7 +63,7 @@ def sample_main(args):
     print(model_path)
     print(config_path)
     print(vocab_path)
-    
+
     # Arguments passed to sample.py direct us to a saved model.
     # Load the separate arguments by which that model was previously trained.
     # That's saved_args. Use those to load the model.
