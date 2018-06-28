@@ -163,11 +163,17 @@ def chatbot(net, sess, chars, vocab, max_length, beam_width, relevance, temperat
                 forward_args={'relevance':relevance, 'mask_reset_token':vocab['\n'], 'forbidden_token':vocab['>'],
                                 'temperature':temperature, 'topn':topn})
             out_chars = []
+            last_spaces_counter = 0
             for i, char_token in enumerate(computer_response_generator):
                 out_chars.append(chars[char_token])
                 text = possibly_escaped_char(out_chars)
                 text = format_output(text)
-                print(text, end='', flush=True)
+                if text == ' ':
+                    last_spaces_counter +=1
+                else:
+                    last_spaces_counter = 0
+                if text != ' ' or last_spaces_counter < 10:
+                    print(text, end='', flush=True)
                 #print(possibly_escaped_char(out_chars), end='', flush=True)
                 states = forward_text(net, sess, states, relevance, vocab, chars[char_token])
                 if i >= max_length: break
