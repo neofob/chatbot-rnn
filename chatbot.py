@@ -145,7 +145,7 @@ def chatbot(net, sess, chars, vocab, max_length, beam_width, relevance, temperat
     states = initial_state_with_relevance_masking(net, sess, relevance)
     while True:
         input_lines = []
-        print(">", end='', flush=True)
+        print("\n>", end='', flush=True)
         while True:
             line = input()
             if line == "!!!":
