@@ -149,7 +149,7 @@ def chatbot(net, sess, chars, vocab, max_length, beam_width, relevance, temperat
             line = input()
             if line == "!!!":
                 break
-            input_lines.append(line.replace('\n', chr(7)).replace('>', chr(6)))
+            input_lines.append(line + "\n".replace('\n', chr(7)).replace('>', chr(6)))
         user_input = ''.join(input_lines)
         print(user_input)
         user_command_entered, reset, states, relevance, temperature, topn, beam_width = process_user_command(
