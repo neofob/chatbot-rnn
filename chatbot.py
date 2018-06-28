@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from __future__ import print_function
 
 import numpy as np
@@ -58,6 +60,10 @@ def get_paths(input_path):
 
 def sample_main(args):
     model_path, config_path, vocab_path = get_paths(args.save_dir)
+    print(model_path)
+    print(config_path)
+    print(vocab_path)
+    
     # Arguments passed to sample.py direct us to a saved model.
     # Load the separate arguments by which that model was previously trained.
     # That's saved_args. Use those to load the model.
@@ -79,6 +85,7 @@ def sample_main(args):
         saver = tf.train.Saver(net.save_variables_list())
         # Restore the saved variables, replacing the initialized values.
         print("Restoring weights...")
+        print(model_path)
         saver.restore(sess, model_path)
         chatbot(net, sess, chars, vocab, args.n, args.beam_width,
                 args.relevance, args.temperature, args.topn)
@@ -104,6 +111,18 @@ def forward_text(net, sess, states, relevance, vocab, prime_text=None):
 
 def sanitize_text(vocab, text): # Strip out characters that are not part of the net's vocab.
     return ''.join(i for i in text if i in vocab)
+
+
+def format_output(src):
+
+    dst = []
+    for c in src:
+        if c == chr(7):
+            c = '\n'
+        if c == chr(6):
+            c = '>'
+        dst.append(c)
+    return ''.join(dst)
 
 def initial_state_with_relevance_masking(net, sess, relevance):
     if relevance <= 0.: return initial_state(net, sess)
@@ -139,7 +158,10 @@ def chatbot(net, sess, chars, vocab, max_length, beam_width, relevance, temperat
             out_chars = []
             for i, char_token in enumerate(computer_response_generator):
                 out_chars.append(chars[char_token])
-                print(possibly_escaped_char(out_chars), end='', flush=True)
+                text = possibly_escaped_char(out_chars)
+                text = format_output(text)
+                print(text, end='', flush=True)
+                #print(possibly_escaped_char(out_chars), end='', flush=True)
                 states = forward_text(net, sess, states, relevance, vocab, chars[char_token])
                 if i >= max_length: break
             states = forward_text(net, sess, states, relevance, vocab, sanitize_text(vocab, "\n> "))
