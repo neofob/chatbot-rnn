@@ -144,13 +144,14 @@ def possibly_escaped_char(raw_chars):
 def chatbot(net, sess, chars, vocab, max_length, beam_width, relevance, temperature, topn):
     states = initial_state_with_relevance_masking(net, sess, relevance)
     while True:
-        user_input = []
+        input_lines = []
         while True:
-            try:
-                line = input()
-            except EOFError:
+            line = input()
+            if line == "!!!":
                 break
-            user_input.append(line.replace('\n', chr(7)).replace('>', chr(6)))
+            input_lines.append(line.replace('\n', chr(7)).replace('>', chr(6)))
+        user_input = ''.join(input_lines)
+        print(user_input)
         user_command_entered, reset, states, relevance, temperature, topn, beam_width = process_user_command(
             user_input, states, relevance, temperature, topn, beam_width)
         if reset: states = initial_state_with_relevance_masking(net, sess, relevance)
