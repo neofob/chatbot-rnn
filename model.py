@@ -43,10 +43,23 @@ class PartitionedMultiRNNCell(rnn_cell.RNNCell):
         super(PartitionedMultiRNNCell, self).__init__()
 
         self._cells = []
+        self._non_trainable_vars = []
         for i in range(layers):
-            self._cells.append([cell_fn(partition_size) for _ in range(partitions)])
+            cells_layer = []
+            for _ in range(partitions):
+                cell = cell_fn(partition_size)
+
+                if i != layers - 1:
+                    self._non_trainable_vars.append(cell.trainable_variables)
+                cells_layer.append(cell)
+            self._cells.append(cells_layer)
+            
+            #self._cells.append([cell_fn(partition_size) for _ in range(partitions)])
         self._partitions = partitions
 
+    def non_trainable_variables_list(self):
+        return self._non_trainable_vars
+        
     @property
     def state_size(self):
         # Return a 2D tuple where each row is the partition's cell size repeated `partitions` times,
@@ -221,7 +234,15 @@ class Model():
             # Create a tensorboard summary of our cost.
             tf.summary.scalar("cost", self.cost)
 
+
             tvars = tf.trainable_variables() # tvars is a python list of all trainable TF Variable objects.
+            print("amount of trainable parameters before:", len(tvars))
+            non_tvars = cell.non_trainable_variables_list()
+            for v_list in non_tvars:
+                for v in v_list:
+                    tvars.remove(v)
+            print("amount of trainable parameters after:", len(tvars))
+                
             # tf.gradients returns a list of tensors of length len(tvars) where each tensor is sum(dy/dx).
             grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
                      args.grad_clip)
