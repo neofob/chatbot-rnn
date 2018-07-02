@@ -47,6 +47,8 @@ def main():
                        help='how often to decay the learning rate')
     parser.add_argument('--set_learning_rate', type=float, default=-1,
                        help='reset learning rate to this value (if greater than zero)')
+    parser.add_argument('--avg_loss_goal', type=float, default=0.35,
+                       help='set average loss goal to reach, training will exit when it reaches this goal')
     args = parser.parse_args()
     train(args)
 
@@ -96,7 +98,7 @@ def train(args):
     #config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
         tf.global_variables_initializer().run()
-        saver = tf.train.Saver(model.save_variables_list(), max_to_keep=3)
+        saver = tf.train.Saver(model.save_variables_list(), max_to_keep=2)
         if (load_model):
             print("Loading saved parameters")
             saver.restore(sess, ckpt.model_checkpoint_path)
@@ -162,6 +164,10 @@ def train(args):
                     print("{:,d} / {:,d} (epoch {:.3f} / {}), loss {:.3f} (avg {:.3f}), {:.3f}s" \
                         .format(b, batch_range[1], e + b / batch_range[1], epoch_range[1],
                             train_loss, avg_loss, elapsed))
+
+                    if avg_loss < args.avg_loss_goal:
+                        print("Reach average loss goal {:.3f} with {:.3f}".format(args.avg_loss_goal, avg_loss))
+                        raise KeyboardInterrupt
                     # Every save_every batches, save the model to disk.
                     # By default, only the five most recent checkpoint files are kept.
                     if (e * batch_range[1] + b + 1) % args.save_every == 0 \
